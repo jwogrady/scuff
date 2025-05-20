@@ -187,3 +187,96 @@ class AWRClient:
             error_msg = f"Exception during project details request: {str(e)}"
             logger.error(error_msg)
             return {"error": str(e)}
+        
+    def get_project_dates(self, project_id):
+        """
+        Get all dates that have ranking data for a specific project
+        https://app.advancedwebranking.com/docs/developer-api-v2.html#get-dates
+    
+        The API requires project name, not ID, so we need to:
+        1. Get the project name from ID using the projects endpoint
+        2. Use the project name to make a get_dates request
+        """
+        try:
+            # Step 1: Get project name from ID
+            projects_url = f"{self.api_url_v2}?action=projects&token={self.api_key}"
+            
+            logger.debug(f"Getting project list to find name for ID: {project_id}")
+            projects_response = requests.get(projects_url, headers={'Accept': 'application/json'})
+            
+            if projects_response.status_code != 200:
+                return {"error": f"Failed to get project list: {projects_response.status_code}"}
+            
+            projects_data = projects_response.json()
+            
+            # Find the project with matching ID
+            project_name = None
+            
+            if 'projects' in projects_data:
+                for project in projects_data['projects']:
+                    if str(project.get('id')) == str(project_id):
+                        project_name = project.get('name')
+                        break
+            
+            if not project_name:
+                logger.error(f"Could not find project with ID: {project_id}")
+                return {"error": f"Project with ID {project_id} not found"}
+            
+            logger.debug(f"Found project name: {project_name} for ID: {project_id}")
+            
+            # Step 2: Get project dates using project name
+            import urllib.parse
+            encoded_project_name = urllib.parse.quote(project_name)
+            
+            dates_url = f"{self.api_url_v2}?action=get_dates&project={encoded_project_name}&token={self.api_key}"
+            
+            logger.debug(f"Getting project dates with URL: {dates_url}")
+            dates_response = requests.get(dates_url, headers={'Accept': 'application/json'})
+            
+            if dates_response.status_code != 200:
+                return {"error": f"Failed to get project dates: {dates_response.status_code}"}
+            
+            try:
+                logger.debug(f"Raw dates response: {dates_response.text[:200]}")
+                
+                dates_data = dates_response.json()
+                
+                # Check for API errors
+                if 'response_code' in dates_data and dates_data['response_code'] != 0:
+                    error_msg = f"{dates_data.get('message', 'Unknown API error')} (Code: {dates_data.get('response_code')})"
+                    logger.error(f"Project dates API error: {error_msg}")
+                    return {"error": error_msg}
+                
+                # Format the response for easy consumption
+                result = {
+                    'project_id': project_id,
+                    'project_name': project_name,
+                    'dates': []
+                }
+                
+                # Extract dates from the response
+                if 'details' in dates_data and 'dates' in dates_data['details']:
+                    result['dates'] = dates_data['details']['dates']
+                    
+                    # Enhance the dates with additional information for the calendar
+                    for date_entry in result['dates']:
+                        # Add day of week, month name for easy formatting
+                        from datetime import datetime
+                        date_obj = datetime.strptime(date_entry['date'], '%Y-%m-%d')
+                        date_entry['day_of_week'] = date_obj.strftime('%a')
+                        date_entry['month'] = date_obj.strftime('%B')
+                        date_entry['day'] = date_obj.strftime('%d')
+                        date_entry['year'] = date_obj.strftime('%Y')
+                
+                return result
+                
+            except ValueError as e:
+                error_msg = f"Could not parse JSON from dates response: {str(e)}"
+                logger.error(error_msg)
+                logger.error(f"Raw response content: {dates_response.text[:500]}")
+                return {"error": error_msg}
+                
+        except Exception as e:
+            error_msg = f"Exception during project dates request: {str(e)}"
+            logger.error(error_msg)
+            return {"error": str(e)}

@@ -81,7 +81,59 @@ def project_detail(request, project_id):
         
         context['success_message'] = "Project details retrieved successfully."
     
-    return render(request, 'awr/project_detail.html', context)
+    response = render(request, 'awr/project_detail.html', context)
+    
+    # Add the calendar link in the response
+    if 'project' in context and 'id' in context['project']:
+        project_id = context['project']['id']
+        calendar_url = request.build_absolute_uri(f"/project_calendar/{project_id}/")
+        response.content = response.content.decode().replace(
+            '</body>',
+            f'<div class="mb-3"><a href="{calendar_url}" class="btn btn-outline-primary">'
+            f'<i class="bi bi-calendar"></i> View Ranking Calendar</a></div></body>'
+        ).encode()
+    
+    return response
+
+def project_calendar(request, project_id):
+    """Display calendar of available ranking data dates for a project"""
+    client = AWRClient()
+    dates_data = client.get_project_dates(project_id)
+    
+    logger.debug(f"Project dates data type: {type(dates_data)}")
+    if isinstance(dates_data, dict):
+        logger.debug(f"Project dates keys: {dates_data.keys()}")
+    
+    context = {
+        'project_id': project_id,
+        'raw_response': dates_data
+    }
+    
+    # Check if there's an error in the response
+    if 'error' in dates_data:
+        context['error'] = dates_data['error']
+    else:
+        # We have dates data
+        context['project_name'] = dates_data.get('project_name')
+        context['dates'] = dates_data.get('dates', [])
+        
+        # Group dates by month and year for the calendar
+        dates_by_month = {}
+        for date_entry in dates_data.get('dates', []):
+            date_parts = date_entry['date'].split('-')
+            year = date_parts[0]
+            month = date_parts[1]
+            
+            key = f"{year}-{month}"
+            if key not in dates_by_month:
+                dates_by_month[key] = []
+                
+            dates_by_month[key].append(date_entry)
+        
+        context['dates_by_month'] = dates_by_month
+        context['success_message'] = f"Found {len(dates_data.get('dates', []))} dates with ranking data."
+    
+    return render(request, 'awr/project_calendar.html', context)
 
 def api_diagnostic(request):
     """Diagnostic endpoint for AWR API troubleshooting"""
