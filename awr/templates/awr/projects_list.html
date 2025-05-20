@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}AWR Projects{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>AWR Projects</h1>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Project List</h4>
+                </div>
+                <div class="card-body">
+                    {% if projects.projects %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Project Name</th>
+                                        <th>Website</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for project in projects.projects %}
+                                    <tr>
+                                        <td>{{ project.project_id }}</td>
+                                        <td>{{ project.project_name }}</td>
+                                        <td>{{ project.website }}</td>
+                                        <td>{{ project.created|date:"M d, Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'awr:project_detail' project.project_id %}" 
+                                               class="btn btn-sm btn-info">
+                                                View Details
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            No projects found. Please check your AWR API connection.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

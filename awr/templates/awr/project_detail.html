@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Project: {{ project.project_info.project_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Project Details</h1>
+        <a href="{% url 'awr:projects_list' %}" class="btn btn-secondary">
+            Back to Projects
+        </a>
+    </div>
+
+    {% if project.project_info %}
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">{{ project.project_info.project_name }}</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>General Information</h4>
+                        <dl class="row">
+                            <dt class="col-sm-4">Project ID</dt>
+                            <dd class="col-sm-8">{{ project.project_info.project_id }}</dd>
+                            
+                            <dt class="col-sm-4">Website</dt>
+                            <dd class="col-sm-8">
+                                <a href="{{ project.project_info.website }}" target="_blank">
+                                    {{ project.project_info.website }}
+                                </a>
+                            </dd>
+                            
+                            <dt class="col-sm-4">Created</dt>
+                            <dd class="col-sm-8">{{ project.project_info.created|date:"M d, Y" }}</dd>
+                            
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">
+                                {% if project.project_info.active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Inactive</span>
+                                {% endif %}
+                            </dd>
+                        </dl>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h4>Project Settings</h4>
+                        <dl class="row">
+                            <dt class="col-sm-4">Search Engines</dt>
+                            <dd class="col-sm-8">{{ project.project_info.search_engines|default:"N/A" }}</dd>
+                            
+                            <dt class="col-sm-4">Keywords</dt>
+                            <dd class="col-sm-8">{{ project.project_info.keywords_count|default:"0" }}</dd>
+                            
+                            <dt class="col-sm-4">Competitors</dt>
+                            <dd class="col-sm-8">{{ project.project_info.competitors_count|default:"0" }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if project.keywords %}
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Keywords</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Keyword</th>
+                                    <th>Search Engine</th>
+                                    <th>Current Position</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for keyword in project.keywords %}
+                                <tr>
+                                    <td>{{ keyword.keyword_id }}</td>
+                                    <td>{{ keyword.keyword }}</td>
+                                    <td>{{ keyword.search_engine }}</td>
+                                    <td>
+                                        {% if keyword.position %}
+                                            {{ keyword.position }}
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        {% if project.competitors %}
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Competitors</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for competitor in project.competitors %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ competitor.name }}</h5>
+                                    <p class="card-text">
+                                        <a href="{{ competitor.url }}" target="_blank">{{ competitor.url }}</a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-danger">
+            Project information not found or there was an error retrieving project details.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
