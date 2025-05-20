@@ -8,20 +8,10 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- Custom CSS -->
-    <style>
-        .navbar-brand {
-            font-weight: bold;
-        }
-        body {
-            padding-top: 60px;
-        }
-    </style>
-    
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="/">SCUFF</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -41,12 +31,6 @@
         {% block content %}
         {% endblock %}
     </main>
-
-    <footer class="bg-light mt-5 py-3">
-        <div class="container text-center">
-            <p class="text-muted mb-0">&copy; {% now "Y" %} SCUFF - AWR API Interface</p>
-        </div>
-    </footer>
 
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>

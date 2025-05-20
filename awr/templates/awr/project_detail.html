@@ -1,132 +1,285 @@
 {% extends "base.html" %}
 
-{% block title %}Project: {{ project.project_info.project_name }}{% endblock %}
+{% block title %}Project Details - {{ project.name|default:project_id }}{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1>Project Details</h1>
-        <a href="{% url 'awr:projects_list' %}" class="btn btn-secondary">
-            Back to Projects
-        </a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="bi bi-diagram-3"></i>
+            Project Details
+        </h1>
+        <div>
+            <a href="{% url 'awr:projects_list' %}" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left"></i> Back to Projects
+            </a>
+            <button type="button" class="btn btn-primary" onclick="location.reload();">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
     </div>
-
-    {% if project.project_info %}
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h3 class="mb-0">{{ project.project_info.project_name }}</h3>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h4>General Information</h4>
-                        <dl class="row">
-                            <dt class="col-sm-4">Project ID</dt>
-                            <dd class="col-sm-8">{{ project.project_info.project_id }}</dd>
-                            
-                            <dt class="col-sm-4">Website</dt>
-                            <dd class="col-sm-8">
-                                <a href="{{ project.project_info.website }}" target="_blank">
-                                    {{ project.project_info.website }}
-                                </a>
-                            </dd>
-                            
-                            <dt class="col-sm-4">Created</dt>
-                            <dd class="col-sm-8">{{ project.project_info.created|date:"M d, Y" }}</dd>
-                            
-                            <dt class="col-sm-4">Status</dt>
-                            <dd class="col-sm-8">
-                                {% if project.project_info.active %}
-                                    <span class="badge bg-success">Active</span>
-                                {% else %}
-                                    <span class="badge bg-warning">Inactive</span>
-                                {% endif %}
-                            </dd>
-                        </dl>
-                    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            {% if error %}
+                <div class="alert alert-danger">
+                    <h4><i class="bi bi-exclamation-triangle"></i> API Error:</h4>
+                    <p>{{ error }}</p>
                     
-                    <div class="col-md-6">
-                        <h4>Project Settings</h4>
+                    <h5>Possible Solutions:</h5>
+                    <ol>
+                        <li>Ensure the project ID ({{ project_id }}) is valid</li>
+                        <li>Check the project URL parameter format in your API call</li>
+                        <li>Verify you have permission to access this project</li>
+                        <li>Check our <a href="{% url 'awr:api_diagnostic' %}">API diagnostic page</a> for more details</li>
+                    </ol>
+                </div>
+            {% endif %}
+            
+            {% if success_message %}
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> {{ success_message }}
+                </div>
+            {% endif %}
+            
+            {% if info_message %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> {{ info_message }}
+                </div>
+            {% endif %}
+            
+            {% if project %}
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="bi bi-info-circle"></i> Project Information</h4>
+                    </div>
+                    <div class="card-body">
                         <dl class="row">
-                            <dt class="col-sm-4">Search Engines</dt>
-                            <dd class="col-sm-8">{{ project.project_info.search_engines|default:"N/A" }}</dd>
+                            <dt class="col-sm-3">Project ID:</dt>
+                            <dd class="col-sm-9">{{ project.id }}</dd>
                             
-                            <dt class="col-sm-4">Keywords</dt>
-                            <dd class="col-sm-8">{{ project.project_info.keywords_count|default:"0" }}</dd>
+                            {% if project.name %}
+                            <dt class="col-sm-3">Project Name:</dt>
+                            <dd class="col-sm-9">{{ project.name }}</dd>
+                            {% endif %}
                             
-                            <dt class="col-sm-4">Competitors</dt>
-                            <dd class="col-sm-8">{{ project.project_info.competitors_count|default:"0" }}</dd>
+                            {% if project.main_website %}
+                                <dt class="col-sm-3">Main Website:</dt>
+                                <dd class="col-sm-9">
+                                    <a href="https://{{ project.main_website }}" target="_blank">
+                                        {{ project.main_website }}
+                                        <i class="bi bi-box-arrow-up-right"></i>
+                                    </a>
+                                </dd>
+                            {% endif %}
+                            
+                            {% if project.last_updated %}
+                                <dt class="col-sm-3">Last Updated:</dt>
+                                <dd class="col-sm-9">{{ project.last_updated }}</dd>
+                            {% endif %}
+                            
+                            {% if project.frequency %}
+                                <dt class="col-sm-3">Update Frequency:</dt>
+                                <dd class="col-sm-9">{{ project.frequency|title }}</dd>
+                            {% endif %}
+                            
+                            {% if project.kwcount %}
+                                <dt class="col-sm-3">Keyword Count:</dt>
+                                <dd class="col-sm-9">{{ project.kwcount }}</dd>
+                            {% endif %}
+                            
+                            {% if project.depth %}
+                                <dt class="col-sm-3">Depth:</dt>
+                                <dd class="col-sm-9">{{ project.depth }}</dd>
+                            {% endif %}
                         </dl>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        {% if project.keywords %}
-            <div class="card mb-4">
-                <div class="card-header bg-info text-white">
-                    <h4 class="mb-0">Keywords</h4>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Keyword</th>
-                                    <th>Search Engine</th>
-                                    <th>Current Position</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for keyword in project.keywords %}
-                                <tr>
-                                    <td>{{ keyword.keyword_id }}</td>
-                                    <td>{{ keyword.keyword }}</td>
-                                    <td>{{ keyword.search_engine }}</td>
-                                    <td>
-                                        {% if keyword.position %}
-                                            {{ keyword.position }}
-                                        {% else %}
-                                            <span class="text-muted">N/A</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                
+                {% if websites %}
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0"><i class="bi bi-globe"></i> Websites ({{ websites|length }})</h4>
                     </div>
-                </div>
-            </div>
-        {% endif %}
-        
-        {% if project.competitors %}
-            <div class="card">
-                <div class="card-header bg-info text-white">
-                    <h4 class="mb-0">Competitors</h4>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        {% for competitor in project.competitors %}
-                        <div class="col-md-4 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ competitor.name }}</h5>
-                                    <p class="card-text">
-                                        <a href="{{ competitor.url }}" target="_blank">{{ competitor.url }}</a>
-                                    </p>
-                                </div>
-                            </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Website</th>
+                                        <th>Index</th>
+                                        <th>Aliases</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for website in websites %}
+                                    <tr>
+                                        <td>
+                                            <a href="https://{{ website.name }}" target="_blank" class="text-decoration-none">
+                                                {{ website.name }}
+                                                <i class="bi bi-box-arrow-up-right small"></i>
+                                            </a>
+                                        </td>
+                                        <td>{{ website.index }}</td>
+                                        <td>
+                                            {% if website.aliases %}
+                                                {% for alias in website.aliases %}
+                                                    <span class="badge bg-light text-dark me-1">{{ alias }}</span>
+                                                {% endfor %}
+                                            {% else %}
+                                                <span class="text-muted">No aliases</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
-                        {% endfor %}
                     </div>
                 </div>
-            </div>
-        {% endif %}
-    {% else %}
-        <div class="alert alert-danger">
-            Project information not found or there was an error retrieving project details.
+                {% endif %}
+                
+                {% if keywords %}
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="mb-0"><i class="bi bi-key"></i> Keywords ({{ keywords|length }})</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Keyword</th>
+                                        <th>Added On</th>
+                                        <th>Priority</th>
+                                        <th>Groups</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for keyword in keywords %}
+                                    <tr>
+                                        <td>{{ keyword.name }}</td>
+                                        <td>{{ keyword.added_on }}</td>
+                                        <td>{{ keyword.priority }}</td>
+                                        <td>
+                                            {% if keyword.kw_groups %}
+                                                {% for group in keyword.kw_groups %}
+                                                    <span class="badge bg-secondary me-1">{{ group }}</span>
+                                                {% endfor %}
+                                            {% else %}
+                                                <span class="text-muted">No groups</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if locations %}
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h4 class="mb-0"><i class="bi bi-geo-alt"></i> Locations ({{ locations|length }})</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Host</th>
+                                        <th>Language</th>
+                                        <th>Country</th>
+                                        <th>Location</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for location in locations %}
+                                    <tr>
+                                        <td>{{ location.host }}</td>
+                                        <td>{{ location.language|upper }}</td>
+                                        <td>{{ location.country }}</td>
+                                        <td>{{ location.location }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if searchengines %}
+                <div class="card mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h4 class="mb-0"><i class="bi bi-search"></i> Search Engines ({{ searchengines|length }})</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for engine in searchengines %}
+                                <div class="col-md-3 col-sm-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title">Engine ID</h5>
+                                            <p class="card-text">{{ engine.awr_id }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+            {% else %}
+                <div class="card">
+                    <div class="card-header bg-warning">
+                        <h4 class="mb-0">Project Not Found</h4>
+                    </div>
+                    <div class="card-body">
+                        <p>Project with ID {{ project_id }} could not be found or the API returned an unexpected format.</p>
+                        <p>Try the following:</p>
+                        <ol>
+                            <li>Check that the project ID is correct</li>
+                            <li>Ensure the project exists in your AWR account</li>
+                            <li>Try using a different API endpoint format</li>
+                        </ol>
+                    </div>
+                </div>
+            {% endif %}
+            
+            {% if raw_response %}
+                <div class="card mt-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-braces"></i> API Response
+                            <button class="btn btn-sm btn-outline-light float-end" type="button" data-bs-toggle="collapse" data-bs-target="#rawResponseCollapse">
+                                Toggle View
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="rawResponseCollapse" class="collapse">
+                        <div class="card-body">
+                            <pre class="bg-light p-3"><code>{{ raw_response|pprint }}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
         </div>
-    {% endif %}
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Any initialization code can go here
+    });
+</script>
 {% endblock %}
